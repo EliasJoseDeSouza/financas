@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="220" height="60">
+  <defs>
+    <linearGradient id="gA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="gC" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="18" width="10" height="26" rx="3" fill="url(#gA)" opacity="0.9"/>
+  <rect x="18" y="10" width="10" height="34" rx="3" fill="url(#gB)" opacity="0.9"/>
+  <rect x="32" y="4" width="10" height="40" rx="3" fill="url(#gC)" opacity="0.9"/>
+  <polyline points="4,44 18,28 32,34 46,8" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+  <text x="56" y="29" font-family="Arial Black, sans-serif" font-weight="900" font-size="19" fill="#e2e8f0" letter-spacing="-1">Finanças</text>
+  <text x="57" y="47" font-family="Arial, sans-serif" font-weight="400" font-size="12" fill="#64748b" letter-spacing="3">FAMÍLIA</text>
+  <rect x="56" y="33" width="78" height="1.5" rx="1" fill="#38bdf8" opacity="0.45"/>
+</svg>

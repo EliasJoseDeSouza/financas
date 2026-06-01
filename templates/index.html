@@ -5,7 +5,26 @@
 {% block content %}
 <div class="dashboard">
 
-    <!-- KPI Cards -->
+    <!-- ── Filtro de Competência ── -->
+    <section class="dash-filter-bar">
+        <form method="GET" class="dash-filter-form">
+            <label class="dash-filter-label">Filtrar por Competência</label>
+            <div class="dash-filter-row">
+                <select name="competencia" class="filter-select dash-select" onchange="this.form.submit()">
+                    <option value="">Todas as competências</option>
+                    {% for comp in todas_competencias %}
+                    <option value="{{ comp }}" {% if filtro_comp == comp %}selected{% endif %}>{{ comp }}</option>
+                    {% endfor %}
+                </select>
+                {% if filtro_comp %}
+                <a href="{{ url_for('index') }}" class="btn-clear-filter">✕ Limpar filtro</a>
+                <span class="filter-active-badge">Exibindo: {{ filtro_comp }}</span>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <!-- ── KPI Cards ── -->
     <section class="kpi-grid">
         <div class="kpi-card kpi-receita">
             <div class="kpi-label">Total Receitas</div>
@@ -29,22 +48,86 @@
         </div>
     </section>
 
-    <!-- Charts Row -->
+    <!-- ── Novos KPIs: Ranking Forma de Pagamento / Recebimento ── -->
+    <section class="ranking-row">
+
+        <!-- Ranking Receitas por Forma de Recebimento -->
+        <div class="ranking-card ranking-receita">
+            <div class="ranking-header">
+                <div class="ranking-icon ranking-icon-receita">↑</div>
+                <div>
+                    <div class="ranking-title">Ranking — Forma de Recebimento</div>
+                    <div class="ranking-sub">Top formas de recebimento por valor{% if filtro_comp %} · {{ filtro_comp }}{% endif %}</div>
+                </div>
+            </div>
+            {% if ranking_receita %}
+            <div class="ranking-list">
+                {% set max_r = ranking_receita[0][1] %}
+                {% for forma, val in ranking_receita %}
+                <div class="ranking-item">
+                    <div class="rank-pos rank-pos-receita">{{ loop.index }}</div>
+                    <div class="rank-details">
+                        <div class="rank-label">{{ forma }}</div>
+                        <div class="rank-bar-wrap">
+                            <div class="rank-bar rank-bar-receita" style="width:{{ (val / max_r * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    <div class="rank-value rank-value-receita">R$ {{ '%.2f'|format(val)|replace('.', ',') }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ranking-empty">Nenhuma receita{% if filtro_comp %} em {{ filtro_comp }}{% endif %}</div>
+            {% endif %}
+        </div>
+
+        <!-- Ranking Despesas por Forma de Pagamento -->
+        <div class="ranking-card ranking-despesa">
+            <div class="ranking-header">
+                <div class="ranking-icon ranking-icon-despesa">↓</div>
+                <div>
+                    <div class="ranking-title">Ranking — Forma de Pagamento</div>
+                    <div class="ranking-sub">Top formas de pagamento por valor{% if filtro_comp %} · {{ filtro_comp }}{% endif %}</div>
+                </div>
+            </div>
+            {% if ranking_despesa %}
+            <div class="ranking-list">
+                {% set max_d = ranking_despesa[0][1] %}
+                {% for forma, val in ranking_despesa %}
+                <div class="ranking-item">
+                    <div class="rank-pos rank-pos-despesa">{{ loop.index }}</div>
+                    <div class="rank-details">
+                        <div class="rank-label">{{ forma }}</div>
+                        <div class="rank-bar-wrap">
+                            <div class="rank-bar rank-bar-despesa" style="width:{{ (val / max_d * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    <div class="rank-value rank-value-despesa">R$ {{ '%.2f'|format(val)|replace('.', ',') }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ranking-empty">Nenhuma despesa{% if filtro_comp %} em {{ filtro_comp }}{% endif %}</div>
+            {% endif %}
+        </div>
+
+    </section>
+
+    <!-- ── Charts Row ── -->
     <section class="charts-row">
         <div class="chart-card chart-main">
             <div class="chart-header">
                 <div class="chart-title">Receitas vs Despesas</div>
-                <div class="chart-sub">Últimas competências</div>
+                <div class="chart-sub">Últimas competências (visão geral)</div>
             </div>
             <div class="chart-wrap">
                 <canvas id="chartComparativo"></canvas>
             </div>
         </div>
-
         <div class="chart-card chart-side">
             <div class="chart-header">
                 <div class="chart-title">Distribuição</div>
-                <div class="chart-sub">Receita × Despesa</div>
+                <div class="chart-sub">Receita × Despesa{% if filtro_comp %} · {{ filtro_comp }}{% endif %}</div>
             </div>
             <div class="chart-wrap chart-wrap-donut">
                 <canvas id="chartDonut"></canvas>
@@ -52,11 +135,11 @@
         </div>
     </section>
 
-    <!-- Top Despesas -->
+    <!-- ── Top Despesas por Descrição ── -->
     {% if top_despesas %}
     <section class="top-despesas-section">
         <div class="section-header">
-            <div class="section-title">Top Despesas por Descrição</div>
+            <div class="section-title">Top Despesas por Descrição{% if filtro_comp %} <span class="section-badge">{{ filtro_comp }}</span>{% endif %}</div>
         </div>
         <div class="top-list">
             {% set max_val = top_despesas[0][1] %}
@@ -71,12 +154,19 @@
             {% endfor %}
         </div>
     </section>
-    {% else %}
+    {% elif not filtro_comp %}
     <section class="empty-state">
         <div class="empty-icon">◎</div>
         <div class="empty-title">Nenhum lançamento ainda</div>
         <div class="empty-sub">Comece adicionando receitas e despesas da sua família.</div>
         <a href="{{ url_for('novo') }}" class="btn-primary">+ Criar primeiro lançamento</a>
+    </section>
+    {% else %}
+    <section class="empty-state">
+        <div class="empty-icon">◉</div>
+        <div class="empty-title">Sem despesas em {{ filtro_comp }}</div>
+        <div class="empty-sub">Nenhuma despesa registrada para esta competência.</div>
+        <a href="{{ url_for('index') }}" class="btn-secondary">Ver todas as competências</a>
     </section>
     {% endif %}
 
@@ -85,85 +175,44 @@
 
 {% block scripts %}
 <script>
-const labels = {{ chart_labels | tojson }};
-const receitas = {{ chart_receitas | tojson }};
-const despesas = {{ chart_despesas | tojson }};
+const labels       = {{ chart_labels   | tojson }};
+const receitas     = {{ chart_receitas | tojson }};
+const despesas     = {{ chart_despesas | tojson }};
 const totalReceita = {{ total_receita }};
 const totalDespesa = {{ total_despesa }};
 
-// Chart comparativo
-const ctx1 = document.getElementById('chartComparativo').getContext('2d');
-new Chart(ctx1, {
+const chartOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'DM Sans', size: 12 } } } },
+    scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#64748b', callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }, grid: { color: 'rgba(255,255,255,0.04)' } }
+    }
+};
+
+new Chart(document.getElementById('chartComparativo').getContext('2d'), {
     type: 'bar',
     data: {
         labels: labels.length ? labels : ['Sem dados'],
         datasets: [
-            {
-                label: 'Receitas',
-                data: receitas.length ? receitas : [0],
-                backgroundColor: 'rgba(52, 211, 153, 0.25)',
-                borderColor: 'rgba(52, 211, 153, 0.9)',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-            },
-            {
-                label: 'Despesas',
-                data: despesas.length ? despesas : [0],
-                backgroundColor: 'rgba(251, 113, 133, 0.25)',
-                borderColor: 'rgba(251, 113, 133, 0.9)',
-                borderWidth: 2,
-                borderRadius: 6,
-                borderSkipped: false,
-            }
+            { label: 'Receitas', data: receitas.length ? receitas : [0], backgroundColor: 'rgba(52,211,153,0.25)', borderColor: 'rgba(52,211,153,0.9)', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+            { label: 'Despesas', data: despesas.length ? despesas : [0], backgroundColor: 'rgba(251,113,133,0.25)', borderColor: 'rgba(251,113,133,0.9)', borderWidth: 2, borderRadius: 6, borderSkipped: false }
         ]
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: { color: '#94a3b8', font: { family: 'DM Sans', size: 12 } }
-            }
-        },
-        scales: {
-            x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-            y: {
-                ticks: {
-                    color: '#64748b',
-                    callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2})
-                },
-                grid: { color: 'rgba(255,255,255,0.04)' }
-            }
-        }
-    }
+    options: chartOpts
 });
 
-// Donut chart
-const ctx2 = document.getElementById('chartDonut').getContext('2d');
-new Chart(ctx2, {
+new Chart(document.getElementById('chartDonut').getContext('2d'), {
     type: 'doughnut',
     data: {
         labels: ['Receitas', 'Despesas'],
-        datasets: [{
-            data: [totalReceita || 0, totalDespesa || 0],
+        datasets: [{ data: [totalReceita || 0, totalDespesa || 0],
             backgroundColor: ['rgba(52,211,153,0.7)', 'rgba(251,113,133,0.7)'],
             borderColor: ['rgba(52,211,153,1)', 'rgba(251,113,133,1)'],
-            borderWidth: 2,
-            hoverOffset: 8
-        }]
+            borderWidth: 2, hoverOffset: 8 }]
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '72%',
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: '#94a3b8', padding: 16, font: { family: 'DM Sans', size: 12 } }
-            }
-        }
-    }
+    options: { responsive: true, maintainAspectRatio: false, cutout: '72%',
+        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 16, font: { family: 'DM Sans', size: 12 } } } } }
 });
 </script>
 {% endblock %}

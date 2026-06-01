@@ -19,10 +19,17 @@
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo">
-            <span class="logo-icon">₿</span>
-            <div>
-                <div class="logo-title">Finanças</div>
-                <div class="logo-sub">Família</div>
+            <img src="{{ url_for('static', filename='imagens/logo.png') }}"
+                 alt="Finanças Família"
+                 class="logo-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <!-- Fallback se a imagem não carregar -->
+            <div class="logo-fallback" style="display:none">
+                <span class="logo-icon">₿</span>
+                <div>
+                    <div class="logo-title">Finanças</div>
+                    <div class="logo-sub">Família</div>
+                </div>
             </div>
         </div>
         <button class="sidebar-close" onclick="closeSidebar()">✕</button>
@@ -47,20 +54,37 @@
     </div>
 
     <div class="sidebar-footer">
-        <div class="sidebar-version">v1.0.0</div>
+        <div class="sidebar-version">v1.1.0</div>
     </div>
 </nav>
 
 <!-- Main -->
 <div class="main-wrapper">
-    <!-- Topbar -->
-    <header class="topbar">
-        <button class="menu-btn" onclick="openSidebar()">
-            <span></span><span></span><span></span>
-        </button>
-        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
-        <a href="{{ url_for('novo') }}" class="topbar-cta">+ Lançar</a>
-    </header>
+
+    <!-- Page hero banner with fundo.png -->
+    <div class="page-hero">
+        <img src="{{ url_for('static', filename='imagens/fundo.png') }}"
+             alt="" class="hero-bg-img" aria-hidden="true">
+        <div class="hero-overlay"></div>
+
+        <!-- Topbar inside hero -->
+        <header class="topbar">
+            <button class="menu-btn" onclick="openSidebar()">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="topbar-center">
+                <img src="{{ url_for('static', filename='imagens/logo.png') }}"
+                     alt="Finanças Família"
+                     class="topbar-logo-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                <span class="topbar-logo-fallback" style="display:none">Finanças Família</span>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-title-badge">{% block page_title %}Dashboard{% endblock %}</div>
+                <a href="{{ url_for('novo') }}" class="topbar-cta">+ Lançar</a>
+            </div>
+        </header>
+    </div>
 
     <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -80,6 +104,13 @@
     <main class="page-content">
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="page-footer">
+        <img src="{{ url_for('static', filename='imagens/logo.png') }}"
+             alt="Finanças Família" class="footer-logo"
+             onerror="this.style.display='none'">
+        <span class="footer-text">Finanças Família © {{ now.year if now else '2026' }}</span>
+    </footer>
 </div>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>

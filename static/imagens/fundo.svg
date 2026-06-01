@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200" width="1200" height="200" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080c10"/>
+      <stop offset="100%" stop-color="#0e1318"/>
+    </linearGradient>
+    <linearGradient id="bar1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="bar2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0.03"/>
+    </linearGradient>
+    <linearGradient id="bar3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.03"/>
+    </linearGradient>
+    <linearGradient id="bar4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="200" fill="url(#bg)"/>
+
+  <!-- Grid lines horizontal -->
+  <line x1="0" y1="50" x2="1200" y2="50" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="0" y1="100" x2="1200" y2="100" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+  <line x1="0" y1="150" x2="1200" y2="150" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+
+  <!-- Grid lines vertical -->
+  <line x1="200" y1="0" x2="200" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="400" y1="0" x2="400" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="600" y1="0" x2="600" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="800" y1="0" x2="800" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="1000" y1="0" x2="1000" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+
+  <!-- Bar chart decorative elements -->
+  <rect x="60"  y="120" width="28" height="80" rx="4" fill="url(#bar2)" opacity="0.7"/>
+  <rect x="100" y="80"  width="28" height="120" rx="4" fill="url(#bar1)" opacity="0.8"/>
+  <rect x="140" y="50"  width="28" height="150" rx="4" fill="url(#bar3)" opacity="0.6"/>
+  <rect x="180" y="95"  width="28" height="105" rx="4" fill="url(#bar4)" opacity="0.5"/>
+  <rect x="220" y="60"  width="28" height="140" rx="4" fill="url(#bar2)" opacity="0.65"/>
+  <rect x="260" y="110" width="28" height="90"  rx="4" fill="url(#bar1)" opacity="0.45"/>
+
+  <!-- Sparkline -->
+  <polyline points="60,120 100,80 140,50 180,95 220,60 260,110 300,75 340,90 380,45 420,70"
+    fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+
+  <!-- Dot accents on sparkline -->
+  <circle cx="140" cy="50" r="4" fill="#38bdf8" opacity="0.5"/>
+  <circle cx="380" cy="45" r="4" fill="#34d399" opacity="0.5"/>
+
+  <!-- Right side: coin / circle accents -->
+  <circle cx="900" cy="100" r="70" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="6 6" opacity="0.07"/>
+  <circle cx="900" cy="100" r="50" fill="none" stroke="#34d399" stroke-width="1" opacity="0.06"/>
+  <circle cx="900" cy="100" r="30" fill="rgba(56,189,248,0.04)" stroke="none"/>
+  <text x="900" y="108" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="28" font-weight="900" fill="#38bdf8" opacity="0.12">R$</text>
+
+  <!-- Floating numbers (decorative) -->
+  <text x="500" y="40"  font-family="Arial, sans-serif" font-size="11" fill="#34d399" opacity="0.1">+1.250,00</text>
+  <text x="700" y="70"  font-family="Arial, sans-serif" font-size="11" fill="#fb7185" opacity="0.1">-380,00</text>
+  <text x="550" y="160" font-family="Arial, sans-serif" font-size="11" fill="#38bdf8" opacity="0.1">+5.000,00</text>
+  <text x="750" y="140" font-family="Arial, sans-serif" font-size="11" fill="#a78bfa" opacity="0.1">saldo</text>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="196" width="1200" height="4" fill="none"/>
+  <line x1="0" y1="198" x2="1200" y2="198" stroke="url(#bar1)" stroke-width="2" opacity="0.3"/>
+</svg>

@@ -44,3 +44,12 @@ window.addEventListener('load', () => {
     setTimeout(() => { el.style.width = target; }, 400 + i * 60);
   });
 });
+
+// Animate ranking bars
+window.addEventListener('load', () => {
+  document.querySelectorAll('.rank-bar').forEach((el, i) => {
+    const target = el.style.width;
+    el.style.width = '0';
+    setTimeout(() => { el.style.width = target; }, 300 + i * 80);
+  });
+});
