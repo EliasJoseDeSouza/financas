@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — Finanças Família{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-title">{{ titulo }}</div>
+            <div class="form-card-sub">Todos os campos são obrigatórios</div>
+        </div>
+
+        <form method="POST" action="{{ action }}" class="lancamento-form" novalidate>
+
+            <!-- Tipo -->
+            <div class="field-group">
+                <label class="field-label">Tipo <span class="required">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option radio-receita {% if dados.get('tipo') == 'receita' %}checked{% endif %}">
+                        <input type="radio" name="tipo" value="receita"
+                               {% if dados.get('tipo') == 'receita' %}checked{% endif %}
+                               required>
+                        <span class="radio-box">
+                            <span class="radio-icon">↑</span>
+                            <span class="radio-text">Receita</span>
+                        </span>
+                    </label>
+                    <label class="radio-option radio-despesa {% if dados.get('tipo') == 'despesa' %}checked{% endif %}">
+                        <input type="radio" name="tipo" value="despesa"
+                               {% if dados.get('tipo') == 'despesa' %}checked{% endif %}
+                               required>
+                        <span class="radio-box">
+                            <span class="radio-icon">↓</span>
+                            <span class="radio-text">Despesa</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Competência -->
+            <div class="field-group">
+                <label class="field-label" for="competencia">Competência <span class="required">*</span></label>
+                <div class="field-hint">Formato: MM/AAAA — ex: 06/2026</div>
+                <input
+                    type="text"
+                    id="competencia"
+                    name="competencia"
+                    class="field-input"
+                    placeholder="06/2026"
+                    value="{{ dados.get('competencia', '') }}"
+                    maxlength="7"
+                    pattern="\d{2}/\d{4}"
+                    required
+                >
+            </div>
+
+            <!-- Descrição -->
+            <div class="field-group">
+                <label class="field-label" for="descricao">Descrição <span class="required">*</span></label>
+                <input
+                    type="text"
+                    id="descricao"
+                    name="descricao"
+                    class="field-input"
+                    placeholder="Ex: Aluguel, Salário, Mercado..."
+                    value="{{ dados.get('descricao', '') }}"
+                    maxlength="255"
+                    required
+                >
+            </div>
+
+            <!-- Valor -->
+            <div class="field-group">
+                <label class="field-label" for="valor">Valor (R$) <span class="required">*</span></label>
+                <div class="input-prefix-wrap">
+                    <span class="input-prefix">R$</span>
+                    <input
+                        type="text"
+                        id="valor"
+                        name="valor"
+                        class="field-input input-with-prefix"
+                        placeholder="0,00"
+                        value="{{ dados.get('valor', '') }}"
+                        inputmode="decimal"
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Forma de Pagamento/Recebimento -->
+            <div class="field-group">
+                <label class="field-label" for="forma">Forma de Pagamento / Recebimento <span class="required">*</span></label>
+                <input
+                    type="text"
+                    id="forma"
+                    name="forma"
+                    class="field-input"
+                    placeholder="Ex: PIX, Débito, Dinheiro, Transferência..."
+                    value="{{ dados.get('forma', '') }}"
+                    maxlength="100"
+                    required
+                >
+            </div>
+
+            <!-- Botões -->
+            <div class="form-actions">
+                <a href="{{ url_for('lancamentos') }}" class="btn-secondary">Cancelar</a>
+                <button type="submit" class="btn-primary">
+                    {% if lancamento is defined %}Salvar alterações{% else %}Salvar lançamento{% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Máscara competência MM/AAAA
+const compInput = document.getElementById('competencia');
+compInput.addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length >= 2) v = v.slice(0,2) + '/' + v.slice(2,6);
+    e.target.value = v;
+});
+
+// Máscara valor decimal
+const valorInput = document.getElementById('valor');
+valorInput.addEventListener('input', function(e) {
+    let v = e.target.value.replace(/[^\d,\.]/g, '');
+    e.target.value = v;
+});
+
+// Highlight radio selecionado
+document.querySelectorAll('.radio-option input').forEach(input => {
+    input.addEventListener('change', () => {
+        document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('checked'));
+        if (input.checked) input.closest('.radio-option').classList.add('checked');
+    });
+});
+
+// Validação frontend
+document.querySelector('.lancamento-form').addEventListener('submit', function(e) {
+    const tipo = document.querySelector('input[name="tipo"]:checked');
+    const competencia = document.getElementById('competencia').value.trim();
+    const descricao = document.getElementById('descricao').value.trim();
+    const valor = document.getElementById('valor').value.trim();
+    const forma = document.getElementById('forma').value.trim();
+
+    const errors = [];
+    if (!tipo) errors.push('Selecione o Tipo (Receita ou Despesa).');
+    if (!competencia || !/^\d{2}\/\d{4}$/.test(competencia)) errors.push('Competência inválida. Use MM/AAAA.');
+    if (!descricao) errors.push('Descrição é obrigatória.');
+    if (!valor || isNaN(parseFloat(valor.replace(',', '.')))) errors.push('Valor inválido.');
+    if (!forma) errors.push('Forma de pagamento/recebimento é obrigatória.');
+
+    if (errors.length) {
+        e.preventDefault();
+        showValidationErrors(errors);
+    }
+});
+
+function showValidationErrors(errors) {
+    document.querySelectorAll('.validation-error').forEach(el => el.remove());
+    const div = document.createElement('div');
+    div.className = 'validation-error';
+    div.innerHTML = errors.map(e => `<div class="val-item">▸ ${e}</div>`).join('');
+    document.querySelector('.form-actions').before(div);
+    div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
+{% endblock %}

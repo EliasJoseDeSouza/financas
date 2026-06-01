@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Finanças Família{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <span class="logo-icon">₿</span>
+            <div>
+                <div class="logo-title">Finanças</div>
+                <div class="logo-sub">Família</div>
+            </div>
+        </div>
+        <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    </div>
+
+    <div class="sidebar-menu">
+        <a href="{{ url_for('index') }}" class="sidebar-item {% if request.endpoint == 'index' %}active{% endif %}">
+            <span class="item-icon">◈</span>
+            <span class="item-label">Dashboard</span>
+            <span class="item-arrow">›</span>
+        </a>
+        <a href="{{ url_for('lancamentos') }}" class="sidebar-item {% if request.endpoint == 'lancamentos' %}active{% endif %}">
+            <span class="item-icon">◉</span>
+            <span class="item-label">Relatórios</span>
+            <span class="item-arrow">›</span>
+        </a>
+        <a href="{{ url_for('novo') }}" class="sidebar-item {% if request.endpoint in ['novo','editar'] %}active{% endif %}">
+            <span class="item-icon">◎</span>
+            <span class="item-label">Novo Lançamento</span>
+            <span class="item-arrow">›</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-version">v1.0.0</div>
+    </div>
+</nav>
+
+<!-- Main -->
+<div class="main-wrapper">
+    <!-- Topbar -->
+    <header class="topbar">
+        <button class="menu-btn" onclick="openSidebar()">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+        <a href="{{ url_for('novo') }}" class="topbar-cta">+ Lançar</a>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Content -->
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

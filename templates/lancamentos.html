@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Relatórios — Finanças Família{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+<div class="relatorios-page">
+
+    <!-- Filtros -->
+    <div class="filters-bar">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label class="filter-label">Tipo</label>
+                <select name="tipo" class="filter-select" onchange="this.form.submit()">
+                    <option value="" {% if not filtro_tipo %}selected{% endif %}>Todos</option>
+                    <option value="receita" {% if filtro_tipo == 'receita' %}selected{% endif %}>Receita</option>
+                    <option value="despesa" {% if filtro_tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Competência</label>
+                <select name="competencia" class="filter-select" onchange="this.form.submit()">
+                    <option value="" {% if not filtro_competencia %}selected{% endif %}>Todas</option>
+                    {% for comp in competencias %}
+                    <option value="{{ comp }}" {% if filtro_competencia == comp %}selected{% endif %}>{{ comp }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if filtro_tipo or filtro_competencia %}
+            <a href="{{ url_for('lancamentos') }}" class="btn-clear-filter">✕ Limpar</a>
+            {% endif %}
+        </form>
+        <div class="filter-count">{{ lancamentos|length }} registro(s)</div>
+    </div>
+
+    <!-- Tabela -->
+    {% if lancamentos %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tipo</th>
+                    <th>Competência</th>
+                    <th>Descrição</th>
+                    <th>Forma Pgto/Receb.</th>
+                    <th class="text-right">Valor</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in lancamentos %}
+                <tr class="table-row">
+                    <td class="td-id">{{ l.id }}</td>
+                    <td>
+                        <span class="badge badge-{{ l.tipo }}">
+                            {{ '↑ Receita' if l.tipo == 'receita' else '↓ Despesa' }}
+                        </span>
+                    </td>
+                    <td class="td-comp">{{ l.competencia }}</td>
+                    <td class="td-desc">{{ l.descricao }}</td>
+                    <td class="td-forma">{{ l.forma }}</td>
+                    <td class="td-valor text-right {{ 'val-receita' if l.tipo == 'receita' else 'val-despesa' }}">
+                        R$ {{ '%.2f'|format(l.valor)|replace('.', ',') }}
+                    </td>
+                    <td class="td-actions text-center">
+                        <a href="{{ url_for('editar', id=l.id) }}" class="btn-action btn-edit" title="Editar">✎</a>
+                        <form method="POST" action="{{ url_for('excluir', id=l.id) }}" class="inline-form"
+                              onsubmit="return confirmDelete(this)">
+                            <button type="submit" class="btn-action btn-delete" title="Excluir">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-total">
+                    <td colspan="5" class="total-label">Total filtrado</td>
+                    <td class="text-right total-value">
+                        R$ {{ '%.2f'|format(lancamentos|sum(attribute='valor'))|replace('.', ',') }}
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">◉</div>
+        <div class="empty-title">Nenhum lançamento encontrado</div>
+        <div class="empty-sub">Tente ajustar os filtros ou adicione um novo lançamento.</div>
+        <a href="{{ url_for('novo') }}" class="btn-primary">+ Novo Lançamento</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal confirmação exclusão -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <div class="modal-icon">◇</div>
+        <div class="modal-title">Confirmar exclusão</div>
+        <div class="modal-body">Tem certeza que deseja excluir este lançamento? Esta ação não pode ser desfeita.</div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="cancelDelete()">Cancelar</button>
+            <button class="btn-modal-confirm" id="confirmBtn">Excluir</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let pendingForm = null;
+
+function confirmDelete(form) {
+    pendingForm = form;
+    document.getElementById('deleteModal').classList.add('active');
+    return false;
+}
+function cancelDelete() {
+    pendingForm = null;
+    document.getElementById('deleteModal').classList.remove('active');
+}
+document.getElementById('confirmBtn').addEventListener('click', () => {
+    if (pendingForm) pendingForm.submit();
+});
+</script>
+{% endblock %}
