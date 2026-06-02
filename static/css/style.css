@@ -536,3 +536,57 @@ tr:hover td {
   }
 
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FILTRO DE COMPETÊNCIA — badges clicáveis
+   ══════════════════════════════════════════════════════════════ */
+.filter-bar {
+  padding: 16px 22px;
+}
+
+.badge-filter {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-bord);
+  background: transparent;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+.badge-filter:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+}
+.badge-filter.active {
+  background: rgba(10, 132, 255, 0.22);
+  color: #70bcff;
+  border-color: rgba(10, 132, 255, 0.40);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRÁFICOS
+   ══════════════════════════════════════════════════════════════ */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.charts-row.two-col {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.chart-card {
+  padding: 22px 22px 18px;
+}
+.chart-card canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  .charts-row.two-col {
+    grid-template-columns: 1fr;
+  }
+}

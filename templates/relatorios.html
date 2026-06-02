@@ -39,8 +39,7 @@
           <td>{{ item.descricao }}</td>
 
           <td class="valor-{{ item.tipo | lower }}">
-            {% if item.tipo == 'Despesa' %}-{% endif %}
-            R$ {{ "%.2f"|format(item.valor) }}
+            {% if item.tipo == 'Despesa' %}-{% endif %}{{ item.valor | brl }}
           </td>
 
           <td class="muted">{{ item.forma_pagamento }}</td>
