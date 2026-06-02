@@ -2,44 +2,236 @@
 
 {% block content %}
 
-<div class="page-title">
-  Visão Geral
-  <span>Resumo financeiro</span>
+<!-- ══════════════════════════════════════════════════
+     FILTRO DE COMPETÊNCIA
+     ══════════════════════════════════════════════════ -->
+<div class="filter-bar">
+
+  <span class="filter-label">📅 Competência</span>
+
+  <div class="filter-pills">
+
+    <a href="/"
+       class="pill {% if competencia_sel == 'todas' %}active{% endif %}">
+      Todas
+    </a>
+
+    {% for c in competencias %}
+    <a href="/?competencia={{ c }}"
+       class="pill {% if competencia_sel == c %}active{% endif %}">
+      {{ c }}
+    </a>
+    {% endfor %}
+
+  </div>
+
 </div>
 
-<!-- ░░ CARDS DE RESUMO ░░ -->
+<!-- ══════════════════════════════════════════════════
+     TÍTULO
+     ══════════════════════════════════════════════════ -->
+<div class="page-title">
+  Visão Geral
+  <span>
+    {% if competencia_sel == 'todas' %}
+      Todos os períodos
+    {% else %}
+      Competência {{ competencia_sel }}
+    {% endif %}
+  </span>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     CARDS DE RESUMO (mantidos)
+     ══════════════════════════════════════════════════ -->
 <div class="dash-grid">
 
   <div class="dash-card receita">
     <div class="dash-label">Receitas</div>
-    <div class="dash-value green">
+    <div class="dash-value green" data-valor="{{ receitas }}">
       R$ {{ "%.2f"|format(receitas) }}
     </div>
   </div>
 
   <div class="dash-card despesa">
     <div class="dash-label">Despesas</div>
-    <div class="dash-value red">
+    <div class="dash-value red" data-valor="{{ despesas }}">
       R$ {{ "%.2f"|format(despesas) }}
     </div>
   </div>
 
   <div class="dash-card saldo">
     <div class="dash-label">Saldo</div>
-    <div class="dash-value {% if saldo >= 0 %}green{% else %}red{% endif %}">
+    <div class="dash-value {% if saldo >= 0 %}green{% else %}red{% endif %}"
+         data-valor="{{ saldo }}">
       R$ {{ "%.2f"|format(saldo) }}
     </div>
   </div>
 
 </div>
 
-<!-- ░░ ATALHOS ░░ -->
-<div class="card" style="margin-top: 8px;">
+<!-- ══════════════════════════════════════════════════
+     GRÁFICO — Receitas vs Despesas (histórico)
+     ══════════════════════════════════════════════════ -->
+<div class="card chart-card">
+  <div class="card-subtitle">📊 RECEITAS VS DESPESAS — HISTÓRICO</div>
+  <div class="chart-wrap">
+    <canvas id="chart-historico"></canvas>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     RANKINGS (lado a lado)
+     ══════════════════════════════════════════════════ -->
+<div class="ranking-grid">
+
+  <!-- Ranking Recebimento -->
+  <div class="card">
+    <div class="card-subtitle">💚 RANKING — FORMA DE RECEBIMENTO</div>
+
+    {% if ranking_recebimento %}
+      {% set max_rec = ranking_recebimento[0][1] %}
+      {% for forma, total in ranking_recebimento %}
+      <div class="rank-item">
+        <div class="rank-top">
+          <span class="rank-nome">{{ forma }}</span>
+          <span class="rank-valor green" data-valor="{{ total }}">
+            R$ {{ "%.2f"|format(total) }}
+          </span>
+        </div>
+        <div class="rank-bar-bg">
+          <div class="rank-bar green-bar"
+               style="width: {{ (total / max_rec * 100)|round }}%">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-rank">Nenhuma receita no período</div>
+    {% endif %}
+  </div>
+
+  <!-- Ranking Pagamento -->
+  <div class="card">
+    <div class="card-subtitle">❤️ RANKING — FORMA DE PAGAMENTO</div>
+
+    {% if ranking_pagamento %}
+      {% set max_pag = ranking_pagamento[0][1] %}
+      {% for forma, total in ranking_pagamento %}
+      <div class="rank-item">
+        <div class="rank-top">
+          <span class="rank-nome">{{ forma }}</span>
+          <span class="rank-valor red" data-valor="{{ total }}">
+            R$ {{ "%.2f"|format(total) }}
+          </span>
+        </div>
+        <div class="rank-bar-bg">
+          <div class="rank-bar red-bar"
+               style="width: {{ (total / max_pag * 100)|round }}%">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-rank">Nenhuma despesa no período</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     ATALHOS (mantidos)
+     ══════════════════════════════════════════════════ -->
+<div class="card" style="margin-top: 20px;">
   <div class="card-subtitle">AÇÕES RÁPIDAS</div>
   <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
     <a href="/lancamentos" class="btn btn-primary">➕ Novo Lançamento</a>
-    <a href="/relatorios" class="btn btn-secondary">📋 Ver Relatórios</a>
+    <a href="/relatorios"  class="btn btn-secondary">📋 Ver Relatórios</a>
   </div>
 </div>
+
+
+<!-- ══════════════════════════════════════════════════
+     CHART.JS + LÓGICA
+     ══════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// ── Formata valores para R$ 1.000,00 ──────────────────────
+function brl(valor) {
+  return Number(valor).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2
+  });
+}
+
+// Aplica formatação BRL em todos os elementos com data-valor
+document.querySelectorAll('[data-valor]').forEach(function(el) {
+  el.textContent = brl(el.dataset.valor);
+});
+
+// ── Gráfico Receitas vs Despesas ──────────────────────────
+const labels  = {{ meses_labels | tojson }};
+const recData = {{ meses_rec    | tojson }};
+const despData= {{ meses_desp   | tojson }};
+
+const ctx = document.getElementById('chart-historico').getContext('2d');
+
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Receitas',
+        data: recData,
+        backgroundColor: 'rgba(74, 222, 128, 0.25)',
+        borderColor   : 'rgba(74, 222, 128, 0.85)',
+        borderWidth   : 1.5,
+        borderRadius  : 8,
+      },
+      {
+        label: 'Despesas',
+        data: despData,
+        backgroundColor: 'rgba(248, 113, 113, 0.25)',
+        borderColor   : 'rgba(248, 113, 113, 0.85)',
+        borderWidth   : 1.5,
+        borderRadius  : 8,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        labels: { color: 'rgba(255,255,255,0.7)', font: { size: 13 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(ctx) {
+            return ' ' + ctx.dataset.label + ': ' + brl(ctx.raw);
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: 'rgba(255,255,255,0.55)', font: { size: 12 } },
+        grid : { color: 'rgba(255,255,255,0.06)' }
+      },
+      y: {
+        ticks: {
+          color: 'rgba(255,255,255,0.55)',
+          font : { size: 12 },
+          callback: function(v) { return brl(v); }
+        },
+        grid: { color: 'rgba(255,255,255,0.06)' }
+      }
+    }
+  }
+});
+</script>
 
 {% endblock %}
