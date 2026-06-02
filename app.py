@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -10,12 +11,24 @@ app = Flask(__name__)
 
 # ─────────────────────────────────────────────────────────────
 # BANCO DE DADOS
-# O arquivo database.db fica dentro da pasta /instance
-# O Render usa armazenamento temporário, por isso os dados
-# somem quando o servidor reinicia. Para dados permanentes,
-# use um banco externo como PostgreSQL (ex: Neon, Supabase).
+#
+# O Render fornece a URL do PostgreSQL numa variável de ambiente
+# chamada DATABASE_URL.
+#
+# O Render entrega a URL começando com "postgres://..." mas o
+# SQLAlchemy só aceita "postgresql://...". A linha abaixo
+# corrige isso automaticamente.
+#
+# Se a variável não existir (ex: rodando no seu computador),
+# usa o SQLite como fallback para não quebrar.
 # ─────────────────────────────────────────────────────────────
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+database_url = os.environ.get("DATABASE_URL", "sqlite:///database.db")
+
+# Correção obrigatória: troca "postgres://" por "postgresql://"
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
 db.init_app(app)
 
