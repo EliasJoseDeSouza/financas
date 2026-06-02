@@ -640,3 +640,19 @@ tr:hover td {
   border-color: rgba(251, 191, 36, 0.25);
   background: rgba(251, 191, 36, 0.06);
 }
+
+/* Botão toggle — Exceto Emprestados */
+.btn-toggle-exceto {
+  color: var(--text-muted);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+.btn-toggle-exceto:hover {
+  background: rgba(248, 113, 113, 0.10);
+  color: #f87171;
+}
+.toggle-on-exceto {
+  background: rgba(248, 113, 113, 0.18) !important;
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+  box-shadow: 0 0 14px rgba(248, 113, 113, 0.12);
+}

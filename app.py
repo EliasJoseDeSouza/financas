@@ -46,7 +46,7 @@ def dashboard():
 
     # Filtros via query-string
     competencia_sel = request.args.get("competencia", "")
-    emprestado_sel  = bool(request.args.get("emprestado", ""))
+    emprestado_sel  = request.args.get("emprestado", "")  # "" | "exceto" | "1"
 
     # Query base filtrada por competência
     query = Lancamento.query
@@ -55,9 +55,11 @@ def dashboard():
 
     todos = query.all()
 
-    # Filtra por "emprestado" na descrição (case-insensitive) se toggle ativo
-    if emprestado_sel:
+    # Aplica filtro de emprestado
+    if emprestado_sel == "1":
         todos = [x for x in todos if "emprestado" in x.descricao.lower()]
+    elif emprestado_sel == "exceto":
+        todos = [x for x in todos if "emprestado" not in x.descricao.lower()]
 
     receitas_list = [x for x in todos if x.tipo == "Receita"]
     despesas_list = [x for x in todos if x.tipo == "Despesa"]
