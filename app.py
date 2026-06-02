@@ -44,21 +44,38 @@ def dashboard():
         reverse=True
     )
 
-    # Filtro selecionado via query-string (?competencia=2024-01)
+    # Filtros via query-string
     competencia_sel = request.args.get("competencia", "")
+    emprestado_sel  = bool(request.args.get("emprestado", ""))
 
-    # Query base filtrada
+    # Query base filtrada por competência
     query = Lancamento.query
     if competencia_sel:
         query = query.filter_by(competencia=competencia_sel)
 
     todos = query.all()
+
+    # Filtra por "emprestado" na descrição (case-insensitive) se toggle ativo
+    if emprestado_sel:
+        todos = [x for x in todos if "emprestado" in x.descricao.lower()]
+
     receitas_list = [x for x in todos if x.tipo == "Receita"]
     despesas_list = [x for x in todos if x.tipo == "Despesa"]
 
     total_receitas = sum(x.valor for x in receitas_list)
     total_despesas = sum(x.valor for x in despesas_list)
     saldo = total_receitas - total_despesas
+
+    # ── Dados do painel emprestado (sempre calculado para o card extra) ──
+    todos_comp = Lancamento.query
+    if competencia_sel:
+        todos_comp = todos_comp.filter_by(competencia=competencia_sel)
+    todos_comp = todos_comp.all()
+    emp_list     = [x for x in todos_comp if "emprestado" in x.descricao.lower()]
+    emp_receitas = sum(x.valor for x in emp_list if x.tipo == "Receita")
+    emp_despesas = sum(x.valor for x in emp_list if x.tipo == "Despesa")
+    emp_saldo    = emp_receitas - emp_despesas
+    emp_count    = len(emp_list)
 
     # ── Gráfico Receitas vs Despesas por competência ──
     # Se há filtro, agrupamos pelo próprio mês; senão, por todos os meses
@@ -99,6 +116,11 @@ def dashboard():
         saldo=saldo,
         competencias=todas_competencias,
         competencia_sel=competencia_sel,
+        emprestado_sel=emprestado_sel,
+        emp_receitas=emp_receitas,
+        emp_despesas=emp_despesas,
+        emp_saldo=emp_saldo,
+        emp_count=emp_count,
         labels_rec_desp=labels_rec_desp,
         dados_receitas=dados_receitas,
         dados_despesas=dados_despesas,

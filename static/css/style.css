@@ -590,3 +590,53 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   BOTÃO TOGGLE — EMPRESTADO
+   ══════════════════════════════════════════════════════════════ */
+.btn-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-bord);
+  background: transparent;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.btn-toggle:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+}
+/* Estado ativo — "Todos" */
+.toggle-on {
+  background: rgba(10, 132, 255, 0.18);
+  color: #60b4ff;
+  border-color: rgba(10, 132, 255, 0.35);
+}
+/* Estado ativo — "Emprestados" */
+.btn-toggle-emp {
+  color: var(--text-muted);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+.btn-toggle-emp:hover {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+.toggle-on-emp {
+  background: rgba(251, 191, 36, 0.18) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.15);
+}
+
+/* Card resumo emprestado */
+.emprestado-summary {
+  border-color: rgba(251, 191, 36, 0.25);
+  background: rgba(251, 191, 36, 0.06);
+}
