@@ -7,6 +7,36 @@
   <span>Todos os lançamentos registrados</span>
 </div>
 
+<!-- ░░ AÇÕES RÁPIDAS ░░ -->
+<div class="card" style="margin-bottom: 20px;">
+  <div class="card-subtitle">AÇÕES RÁPIDAS</div>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
+    <a href="/lancamentos" class="btn btn-primary">➕ Novo Lançamento</a>
+    <a href="/" class="btn btn-secondary">📊 Ver Dashboard</a>
+  </div>
+</div>
+
+<!-- ░░ FILTRO DE COMPETÊNCIA ░░ -->
+<div class="card filter-bar" style="margin-bottom: 20px;">
+  <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+    <span style="font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); white-space:nowrap;">
+      📅 Competência
+    </span>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="{{ url_for('relatorios') }}"
+         class="badge-filter {% if not competencia_sel %}active{% endif %}">
+        Todas
+      </a>
+      {% for c in competencias %}
+      <a href="{{ url_for('relatorios', competencia=c) }}"
+         class="badge-filter {% if competencia_sel == c %}active{% endif %}">
+        {{ c }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
 <!-- ░░ TABELA ░░ -->
 <div class="table-wrap">
 

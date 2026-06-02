@@ -46,7 +46,7 @@ def dashboard():
 
     # Filtros via query-string
     competencia_sel = request.args.get("competencia", "")
-    emprestado_sel  = request.args.get("emprestado", "")  # "" | "exceto" | "1"
+    emprestado_sel  = request.args.get("emprestado", "exceto")  # padrão: exceto
 
     # Query base filtrada por competência
     query = Lancamento.query
@@ -58,7 +58,7 @@ def dashboard():
     # Aplica filtro de emprestado
     if emprestado_sel == "1":
         todos = [x for x in todos if "emprestado" in x.descricao.lower()]
-    elif emprestado_sel == "exceto":
+    elif emprestado_sel != "todos":   # "exceto" ou qualquer valor desconhecido
         todos = [x for x in todos if "emprestado" not in x.descricao.lower()]
 
     receitas_list = [x for x in todos if x.tipo == "Receita"]
@@ -150,8 +150,24 @@ def lancamentos():
 
 @app.route("/relatorios")
 def relatorios():
-    dados = Lancamento.query.order_by(Lancamento.id.desc()).all()
-    return render_template("relatorios.html", dados=dados)
+    todas_competencias = sorted(
+        set(r.competencia for r in Lancamento.query.all()),
+        reverse=True
+    )
+    competencia_sel = request.args.get("competencia", "")
+
+    query = Lancamento.query
+    if competencia_sel:
+        query = query.filter_by(competencia=competencia_sel)
+
+    dados = query.order_by(Lancamento.id.desc()).all()
+
+    return render_template(
+        "relatorios.html",
+        dados=dados,
+        competencias=todas_competencias,
+        competencia_sel=competencia_sel,
+    )
 
 
 @app.route("/editar/<int:id>", methods=["GET", "POST"])

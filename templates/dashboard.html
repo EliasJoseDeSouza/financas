@@ -37,8 +37,8 @@
     <span style="font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); white-space:nowrap;">
       🤝 Visualizar
     </span>
-    <a href="{{ url_for('dashboard', competencia=competencia_sel, emprestado='') }}"
-       class="btn-toggle {% if not emprestado_sel %}toggle-on{% endif %}">
+    <a href="{{ url_for('dashboard', competencia=competencia_sel, emprestado='todos') }}"
+       class="btn-toggle {% if emprestado_sel == 'todos' %}toggle-on{% endif %}">
       📊 Todos
     </a>
     <a href="{{ url_for('dashboard', competencia=competencia_sel, emprestado='exceto') }}"
@@ -75,7 +75,7 @@
 
 </div>
 
-{% if emprestado_sel %}
+{% if emprestado_sel == 'exceto' or not emprestado_sel %}
 <!-- Card extra: resumo dos emprestados -->
 <div class="card emprestado-summary" style="margin-top: 16px;">
   <div class="card-subtitle">🤝 RESUMO — EMPRESTADOS</div>
@@ -100,14 +100,7 @@
 </div>
 {% endif %}
 
-<!-- ░░ ATALHOS ░░ -->
-<div class="card" style="margin-top: 8px; margin-bottom: 28px;">
-  <div class="card-subtitle">AÇÕES RÁPIDAS</div>
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
-    <a href="/lancamentos" class="btn btn-primary">➕ Novo Lançamento</a>
-    <a href="/relatorios" class="btn btn-secondary">📋 Ver Relatórios</a>
-  </div>
-</div>
+
 
 <!-- ░░ GRÁFICOS ░░ -->
 
