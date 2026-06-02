@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="page-title">
+  Visão Geral
+  <span>Resumo financeiro</span>
+</div>
+
+<!-- ░░ CARDS DE RESUMO ░░ -->
+<div class="dash-grid">
+
+  <div class="dash-card receita">
+    <div class="dash-label">Receitas</div>
+    <div class="dash-value green">
+      R$ {{ "%.2f"|format(receitas) }}
+    </div>
+  </div>
+
+  <div class="dash-card despesa">
+    <div class="dash-label">Despesas</div>
+    <div class="dash-value red">
+      R$ {{ "%.2f"|format(despesas) }}
+    </div>
+  </div>
+
+  <div class="dash-card saldo">
+    <div class="dash-label">Saldo</div>
+    <div class="dash-value {% if saldo >= 0 %}green{% else %}red{% endif %}">
+      R$ {{ "%.2f"|format(saldo) }}
+    </div>
+  </div>
+
+</div>
+
+<!-- ░░ ATALHOS ░░ -->
+<div class="card" style="margin-top: 8px;">
+  <div class="card-subtitle">AÇÕES RÁPIDAS</div>
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
+    <a href="/lancamentos" class="btn btn-primary">➕ Novo Lançamento</a>
+    <a href="/relatorios" class="btn btn-secondary">📋 Ver Relatórios</a>
+  </div>
+</div>
+
+{% endblock %}

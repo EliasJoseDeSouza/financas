@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="page-title">
+  Relatórios
+  <span>Todos os lançamentos registrados</span>
+</div>
+
+<!-- ░░ TABELA ░░ -->
+<div class="table-wrap">
+
+  {% if dados %}
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tipo</th>
+          <th>Competência</th>
+          <th>Descrição</th>
+          <th>Valor</th>
+          <th>Pagamento</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in dados %}
+        <tr>
+          <td class="muted">#{{ item.id }}</td>
+
+          <td>
+            <span class="badge badge-{{ item.tipo | lower }}">
+              {{ item.tipo }}
+            </span>
+          </td>
+
+          <td>{{ item.competencia }}</td>
+          <td>{{ item.descricao }}</td>
+
+          <td class="valor-{{ item.tipo | lower }}">
+            {% if item.tipo == 'Despesa' %}-{% endif %}
+            R$ {{ "%.2f"|format(item.valor) }}
+          </td>
+
+          <td class="muted">{{ item.forma_pagamento }}</td>
+
+          <td>
+            <div class="actions">
+              <a href="/editar/{{ item.id }}" class="btn btn-secondary btn-sm">✏️</a>
+              <a href="/excluir/{{ item.id }}"
+                 class="btn btn-danger btn-sm"
+                 onclick="return confirm('Excluir este lançamento?')">🗑</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% else %}
+
+    <div class="empty">
+      <div class="empty-icon">📂</div>
+      <p>Nenhum lançamento registrado ainda.</p>
+      <a href="/lancamentos" class="btn btn-primary" style="margin-top: 16px; display: inline-flex;">
+        ➕ Adicionar primeiro lançamento
+      </a>
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

@@ -3,8 +3,8 @@
 {% block content %}
 
 <div class="page-title">
-  Novo Lançamento
-  <span>Registrar uma receita ou despesa</span>
+  Editar Lançamento
+  <span>Modificar registro #{{ item.id }}</span>
 </div>
 
 <div class="card">
@@ -13,38 +13,34 @@
 
     <div class="form-grid">
 
-      <!-- Tipo -->
       <div class="form-group">
         <label for="tipo">Tipo</label>
         <select name="tipo" id="tipo" required>
-          <option value="Receita">Receita</option>
-          <option value="Despesa">Despesa</option>
+          <option value="Receita"   {% if item.tipo == 'Receita'  %}selected{% endif %}>Receita</option>
+          <option value="Despesa"   {% if item.tipo == 'Despesa'  %}selected{% endif %}>Despesa</option>
         </select>
       </div>
 
-      <!-- Competência -->
       <div class="form-group">
         <label for="competencia">Competência</label>
         <input
           type="text"
           name="competencia"
           id="competencia"
-          placeholder="Ex: 06/2026"
+          value="{{ item.competencia }}"
           required>
       </div>
 
-      <!-- Descrição (ocupa linha inteira) -->
       <div class="form-group full">
         <label for="descricao">Descrição</label>
         <input
           type="text"
           name="descricao"
           id="descricao"
-          placeholder="Ex: Salário, Aluguel, Supermercado..."
+          value="{{ item.descricao }}"
           required>
       </div>
 
-      <!-- Valor -->
       <div class="form-group">
         <label for="valor">Valor (R$)</label>
         <input
@@ -52,26 +48,25 @@
           step="0.01"
           name="valor"
           id="valor"
-          placeholder="0,00"
+          value="{{ item.valor }}"
           required>
       </div>
 
-      <!-- Forma de pagamento -->
       <div class="form-group">
         <label for="forma_pagamento">Forma de Pagamento</label>
         <input
           type="text"
           name="forma_pagamento"
           id="forma_pagamento"
-          placeholder="Ex: PIX, Cartão, Dinheiro..."
+          value="{{ item.forma_pagamento }}"
           required>
       </div>
 
-      <!-- Botão -->
       <div class="form-group full" style="margin-top: 6px;">
-        <button type="submit" class="btn btn-primary">
-          ✓ Salvar Lançamento
-        </button>
+        <div style="display: flex; gap: 12px;">
+          <button type="submit" class="btn btn-primary">✓ Salvar alterações</button>
+          <a href="/relatorios" class="btn btn-secondary">Cancelar</a>
+        </div>
       </div>
 
     </div>

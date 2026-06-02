@@ -1,119 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Finanças Família{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle Financeiro</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
 </head>
 <body>
 
-<!-- Overlay -->
-<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+  <!-- ░░ FUNDO ░░
+       A imagem fundo.png fica em static/imagens/fundo.png
+       O div abaixo a exibe "resfolgada" (efeito vidro por cima) -->
+  <div id="bg"></div>
 
-<!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <img src="{{ url_for('static', filename='imagens/logo.png') }}"
-                 alt="Finanças Família"
-                 class="logo-img"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-            <!-- Fallback se a imagem não carregar -->
-            <div class="logo-fallback" style="display:none">
-                <span class="logo-icon">₿</span>
-                <div>
-                    <div class="logo-title">Finanças</div>
-                    <div class="logo-sub">Família</div>
-                </div>
-            </div>
-        </div>
-        <button class="sidebar-close" onclick="closeSidebar()">✕</button>
-    </div>
+  <!-- ░░ SIDEBAR (menu lateral) ░░ -->
+  <nav id="sidebar">
 
-    <div class="sidebar-menu">
-        <a href="{{ url_for('index') }}" class="sidebar-item {% if request.endpoint == 'index' %}active{% endif %}">
-            <span class="item-icon">◈</span>
-            <span class="item-label">Dashboard</span>
-            <span class="item-arrow">›</span>
-        </a>
-        <a href="{{ url_for('lancamentos') }}" class="sidebar-item {% if request.endpoint == 'lancamentos' %}active{% endif %}">
-            <span class="item-icon">◉</span>
-            <span class="item-label">Relatórios</span>
-            <span class="item-arrow">›</span>
-        </a>
-        <a href="{{ url_for('novo') }}" class="sidebar-item {% if request.endpoint in ['novo','editar'] %}active{% endif %}">
-            <span class="item-icon">◎</span>
-            <span class="item-label">Novo Lançamento</span>
-            <span class="item-arrow">›</span>
-        </a>
-    </div>
+    <div class="sidebar-logo">💰 Finanças</div>
 
-    <div class="sidebar-footer">
-        <div class="sidebar-version">v1.1.0</div>
-    </div>
-</nav>
+    <a href="/" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
 
-<!-- Main -->
-<div class="main-wrapper">
+    <a href="/lancamentos" class="nav-item {% if request.endpoint == 'lancamentos' %}active{% endif %}">
+      <span class="nav-icon">➕</span> Lançamentos
+    </a>
 
-    <!-- Page hero banner with fundo.png -->
-    <div class="page-hero">
-        <img src="{{ url_for('static', filename='imagens/fundo.png') }}"
-             alt="" class="hero-bg-img" aria-hidden="true">
-        <div class="hero-overlay"></div>
+    <a href="/relatorios" class="nav-item {% if request.endpoint == 'relatorios' %}active{% endif %}">
+      <span class="nav-icon">📋</span> Relatórios
+    </a>
 
-        <!-- Topbar inside hero -->
-        <header class="topbar">
-            <button class="menu-btn" onclick="openSidebar()">
-                <span></span><span></span><span></span>
-            </button>
-            <div class="topbar-center">
-                <img src="{{ url_for('static', filename='imagens/logo.png') }}"
-                     alt="Finanças Família"
-                     class="topbar-logo-img"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                <span class="topbar-logo-fallback" style="display:none">Finanças Família</span>
-            </div>
-            <div class="topbar-right">
-                <div class="topbar-title-badge">{% block page_title %}Dashboard{% endblock %}</div>
-                <a href="{{ url_for('novo') }}" class="topbar-cta">+ Lançar</a>
-            </div>
-        </header>
-    </div>
+  </nav>
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-container">
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">
-                        <span>{{ message }}</span>
-                        <button onclick="this.parentElement.remove()">✕</button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+  <!-- ░░ BARRA SUPERIOR ░░ -->
+  <div id="topbar">
+    <button id="menu-btn" onclick="toggleMenu()">☰</button>
+    <h2>Controle Financeiro Familiar</h2>
+  </div>
 
-    <!-- Page Content -->
-    <main class="page-content">
-        {% block content %}{% endblock %}
-    </main>
+  <!-- ░░ CONTEÚDO DA PÁGINA ░░ -->
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
 
-    <footer class="page-footer">
-        <img src="{{ url_for('static', filename='imagens/logo.png') }}"
-             alt="Finanças Família" class="footer-logo"
-             onerror="this.style.display='none'">
-        <span class="footer-text">Finanças Família © {{ now.year if now else '2026' }}</span>
-    </footer>
-</div>
+  <!-- JS -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-{% block scripts %}{% endblock %}
 </body>
 </html>

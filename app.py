@@ -1,12 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
-from database import db, Lancamento
-from datetime import datetime
-import os
+from flask import Flask
+from flask import render_template
+from flask import request
+from flask import redirect
+from flask import url_for
+
+from models import db, Lancamento
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'financas-familia-secret-key-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///financas.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# ─────────────────────────────────────────────────────────────
+# BANCO DE DADOS
+# O arquivo database.db fica dentro da pasta /instance
+# O Render usa armazenamento temporário, por isso os dados
+# somem quando o servidor reinicia. Para dados permanentes,
+# use um banco externo como PostgreSQL (ex: Neon, Supabase).
+# ─────────────────────────────────────────────────────────────
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 
 db.init_app(app)
 
@@ -14,208 +23,69 @@ with app.app_context():
     db.create_all()
 
 
-@app.context_processor
-def inject_now():
-    return {'now': datetime.now()}
+@app.route("/")
+def dashboard():
+    receitas = Lancamento.query.filter_by(tipo="Receita").all()
+    despesas = Lancamento.query.filter_by(tipo="Despesa").all()
 
+    total_receitas = sum(x.valor for x in receitas)
+    total_despesas = sum(x.valor for x in despesas)
+    saldo = total_receitas - total_despesas
 
-def sort_competencias(lista):
-    def key(x):
-        try:
-            m, y = x.split('/')
-            return (int(y), int(m))
-        except:
-            return (0, 0)
-    return sorted(lista, key=key)
-
-
-@app.route('/')
-def index():
-    filtro_comp = request.args.get('competencia', '')
-
-    todas_competencias_raw = db.session.query(Lancamento.competencia).distinct().all()
-    todas_competencias = sort_competencias([c[0] for c in todas_competencias_raw])
-
-    # Lançamentos filtrados para KPIs
-    query = Lancamento.query
-    if filtro_comp:
-        query = query.filter_by(competencia=filtro_comp)
-    lancamentos = query.all()
-
-    total_receita = sum(l.valor for l in lancamentos if l.tipo == 'receita')
-    total_despesa = sum(l.valor for l in lancamentos if l.tipo == 'despesa')
-    saldo = total_receita - total_despesa
-
-    # Top despesas por descrição (filtrado)
-    despesas_por_desc = {}
-    for l in lancamentos:
-        if l.tipo == 'despesa':
-            despesas_por_desc[l.descricao] = despesas_por_desc.get(l.descricao, 0) + l.valor
-    top_despesas = sorted(despesas_por_desc.items(), key=lambda x: x[1], reverse=True)[:8]
-
-    # ── Ranking Forma de Pagamento/Recebimento (filtrado) ──
-    formas_receita = {}
-    formas_despesa = {}
-    for l in lancamentos:
-        if l.tipo == 'receita':
-            formas_receita[l.forma] = formas_receita.get(l.forma, 0) + l.valor
-        else:
-            formas_despesa[l.forma] = formas_despesa.get(l.forma, 0) + l.valor
-
-    ranking_receita = sorted(formas_receita.items(), key=lambda x: x[1], reverse=True)[:6]
-    ranking_despesa = sorted(formas_despesa.items(), key=lambda x: x[1], reverse=True)[:6]
-
-    # ── Gráfico comparativo — SEMPRE usa todos os lançamentos (sem filtro comp) ──
-    todos = Lancamento.query.all()
-    por_competencia = {}
-    for l in todos:
-        comp = l.competencia
-        if comp not in por_competencia:
-            por_competencia[comp] = {'receita': 0, 'despesa': 0}
-        por_competencia[comp][l.tipo] += l.valor
-
-    comp_sorted = sort_competencias(list(por_competencia.keys()))
-    chart_labels   = comp_sorted[-6:] if len(comp_sorted) > 6 else comp_sorted
-    chart_receitas = [round(por_competencia[c]['receita'], 2) for c in chart_labels]
-    chart_despesas = [round(por_competencia[c]['despesa'], 2) for c in chart_labels]
-
-    return render_template('index.html',
-        total_receita=total_receita,
-        total_despesa=total_despesa,
-        saldo=saldo,
-        top_despesas=top_despesas,
-        chart_labels=chart_labels,
-        chart_receitas=chart_receitas,
-        chart_despesas=chart_despesas,
-        total_lancamentos=len(lancamentos),
-        todas_competencias=todas_competencias,
-        filtro_comp=filtro_comp,
-        ranking_receita=ranking_receita,
-        ranking_despesa=ranking_despesa,
+    return render_template(
+        "dashboard.html",
+        receitas=total_receitas,
+        despesas=total_despesas,
+        saldo=saldo
     )
 
 
-@app.route('/lancamentos')
+@app.route("/lancamentos", methods=["GET", "POST"])
 def lancamentos():
-    tipo = request.args.get('tipo', '')
-    competencia = request.args.get('competencia', '')
-
-    query = Lancamento.query
-    if tipo:
-        query = query.filter_by(tipo=tipo)
-    if competencia:
-        query = query.filter_by(competencia=competencia)
-
-    items = query.order_by(Lancamento.id.desc()).all()
-    competencias_raw = db.session.query(Lancamento.competencia).distinct().all()
-    competencias = sort_competencias([c[0] for c in competencias_raw])
-
-    return render_template('lancamentos.html',
-        lancamentos=items,
-        competencias=competencias,
-        filtro_tipo=tipo,
-        filtro_competencia=competencia
-    )
-
-
-@app.route('/novo', methods=['GET', 'POST'])
-def novo():
-    if request.method == 'POST':
-        tipo       = request.form.get('tipo', '').strip()
-        competencia= request.form.get('competencia', '').strip()
-        descricao  = request.form.get('descricao', '').strip()
-        valor_str  = request.form.get('valor', '').strip().replace(',', '.')
-        forma      = request.form.get('forma', '').strip()
-
-        errors = []
-        if not tipo:        errors.append('Tipo é obrigatório.')
-        if not competencia: errors.append('Competência é obrigatória.')
-        if not descricao:   errors.append('Descrição é obrigatória.')
-        if not valor_str:
-            errors.append('Valor é obrigatório.')
-        else:
-            try:
-                valor = float(valor_str)
-                if valor <= 0: errors.append('Valor deve ser maior que zero.')
-            except ValueError:
-                errors.append('Valor inválido.')
-        if not forma: errors.append('Forma de pagamento/recebimento é obrigatória.')
-
-        if errors:
-            for e in errors: flash(e, 'error')
-            return render_template('form_lancamento.html',
-                titulo='Novo Lançamento', action=url_for('novo'), dados=request.form)
-
-        db.session.add(Lancamento(
-            tipo=tipo, competencia=competencia, descricao=descricao,
-            valor=float(valor_str), forma=forma, criado_em=datetime.now()
-        ))
+    if request.method == "POST":
+        novo = Lancamento(
+            tipo=request.form["tipo"],
+            competencia=request.form["competencia"],
+            descricao=request.form["descricao"],
+            valor=float(request.form["valor"]),
+            forma_pagamento=request.form["forma_pagamento"]
+        )
+        db.session.add(novo)
         db.session.commit()
-        flash('Lançamento criado com sucesso!', 'success')
-        return redirect(url_for('lancamentos'))
+        return redirect(url_for("relatorios"))
 
-    return render_template('form_lancamento.html',
-        titulo='Novo Lançamento', action=url_for('novo'), dados={})
+    return render_template("lancamentos.html")
 
 
-@app.route('/editar/<int:id>', methods=['GET', 'POST'])
+@app.route("/relatorios")
+def relatorios():
+    dados = Lancamento.query.order_by(Lancamento.id.desc()).all()
+    return render_template("relatorios.html", dados=dados)
+
+
+@app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
-    lancamento = Lancamento.query.get_or_404(id)
+    item = Lancamento.query.get_or_404(id)
 
-    if request.method == 'POST':
-        tipo       = request.form.get('tipo', '').strip()
-        competencia= request.form.get('competencia', '').strip()
-        descricao  = request.form.get('descricao', '').strip()
-        valor_str  = request.form.get('valor', '').strip().replace(',', '.')
-        forma      = request.form.get('forma', '').strip()
-
-        errors = []
-        if not tipo:        errors.append('Tipo é obrigatório.')
-        if not competencia: errors.append('Competência é obrigatória.')
-        if not descricao:   errors.append('Descrição é obrigatória.')
-        if not valor_str:
-            errors.append('Valor é obrigatório.')
-        else:
-            try:
-                valor = float(valor_str)
-                if valor <= 0: errors.append('Valor deve ser maior que zero.')
-            except ValueError:
-                errors.append('Valor inválido.')
-        if not forma: errors.append('Forma de pagamento/recebimento é obrigatória.')
-
-        if errors:
-            for e in errors: flash(e, 'error')
-            return render_template('form_lancamento.html',
-                titulo='Editar Lançamento', action=url_for('editar', id=id),
-                dados=request.form, lancamento=lancamento)
-
-        lancamento.tipo        = tipo
-        lancamento.competencia = competencia
-        lancamento.descricao   = descricao
-        lancamento.valor       = float(valor_str)
-        lancamento.forma       = forma
+    if request.method == "POST":
+        item.tipo = request.form["tipo"]
+        item.competencia = request.form["competencia"]
+        item.descricao = request.form["descricao"]
+        item.valor = float(request.form["valor"])
+        item.forma_pagamento = request.form["forma_pagamento"]
         db.session.commit()
-        flash('Lançamento atualizado com sucesso!', 'success')
-        return redirect(url_for('lancamentos'))
+        return redirect(url_for("relatorios"))
 
-    dados = {
-        'tipo': lancamento.tipo, 'competencia': lancamento.competencia,
-        'descricao': lancamento.descricao, 'valor': f'{lancamento.valor:.2f}',
-        'forma': lancamento.forma
-    }
-    return render_template('form_lancamento.html',
-        titulo='Editar Lançamento', action=url_for('editar', id=id),
-        dados=dados, lancamento=lancamento)
+    return render_template("editar.html", item=item)
 
 
-@app.route('/excluir/<int:id>', methods=['POST'])
+@app.route("/excluir/<int:id>")
 def excluir(id):
-    lancamento = Lancamento.query.get_or_404(id)
-    db.session.delete(lancamento)
+    item = Lancamento.query.get_or_404(id)
+    db.session.delete(item)
     db.session.commit()
-    flash('Lançamento excluído com sucesso!', 'success')
-    return redirect(url_for('lancamentos'))
+    return redirect(url_for("relatorios"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
