@@ -44,7 +44,7 @@ FORMAS_PAGAMENTO = [
     "Elias - Cartão Santander Visa",
     "Elias - Cartão Itaú Master",
     "Elias - Cartão Itaú Visa",
-    "Elias - Cartão Mercado Pago"
+    "Elias - Cartão Mercado Pago",
     "Elias - Conta Santander",
     "Elias - Conta Itaú",
     "Elias - Conta Bradesco",
