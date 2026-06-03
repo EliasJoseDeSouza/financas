@@ -47,7 +47,7 @@ FORMAS_PAGAMENTO = [
     "Elias - Conta Santander",
     "Elias - Conta Itaú",
     "Elias - Conta Bradesco",
-    "Elias - iFood Beneficios"
+    "Elias - iFood Beneficios",
 ]
 
 
@@ -172,7 +172,15 @@ def lancamentos():
         db.session.commit()
         return redirect(url_for("relatorios"))
 
-    return render_template("lancamentos.html", formas_pagamento=FORMAS_PAGAMENTO)
+    prefill = {
+        "tipo": request.args.get("tipo", ""),
+        "competencia": request.args.get("competencia", ""),
+        "descricao": request.args.get("descricao", ""),
+        "valor": request.args.get("valor", ""),
+        "forma_pagamento": request.args.get("forma_pagamento", ""),
+    }
+    replicando = any(prefill.values())
+    return render_template("lancamentos.html", formas_pagamento=FORMAS_PAGAMENTO, prefill=prefill, replicando=replicando)
 
 
 @app.route("/relatorios")
@@ -269,6 +277,18 @@ def exportar_xlsx():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={nome}"}
     )
+
+
+@app.route("/replicar/<int:id>")
+def replicar(id):
+    item = Lancamento.query.get_or_404(id)
+    return redirect(url_for("lancamentos",
+        tipo=item.tipo,
+        competencia=item.competencia,
+        descricao=item.descricao,
+        valor=item.valor,
+        forma_pagamento=item.forma_pagamento
+    ))
 
 
 @app.route("/editar/<int:id>", methods=["GET", "POST"])

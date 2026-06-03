@@ -4,7 +4,7 @@
 
 <div class="page-title">
   Novo Lançamento
-  <span>Registrar uma receita ou despesa</span>
+  <span>{% if replicando %}Replicar lançamento — edite antes de salvar{% else %}Registrar uma receita ou despesa{% endif %}</span>
 </div>
 
 <div class="card">
@@ -17,8 +17,8 @@
       <div class="form-group">
         <label for="tipo">Tipo</label>
         <select name="tipo" id="tipo" required>
-          <option value="Despesa" selected>Despesa</option>
-          <option value="Receita">Receita</option>
+          <option value="Despesa" {% if prefill.tipo == 'Despesa' %}selected{% elif not prefill.tipo %}selected{% endif %}>Despesa</option>
+          <option value="Receita" {% if prefill.tipo == 'Receita' %}selected{% endif %}>Receita</option>
         </select>
       </div>
 
@@ -30,6 +30,7 @@
           name="competencia"
           id="competencia"
           placeholder="Ex: 06/2026"
+          value="{{ prefill.competencia }}"
           required>
       </div>
 
@@ -41,6 +42,7 @@
           name="descricao"
           id="descricao"
           placeholder="Ex: Salário, Aluguel, Supermercado..."
+          value="{{ prefill.descricao }}"
           required>
       </div>
 
@@ -53,6 +55,7 @@
           name="valor"
           id="valor"
           placeholder="0,00"
+          value="{{ prefill.valor }}"
           required>
       </div>
 
@@ -60,9 +63,9 @@
       <div class="form-group">
         <label for="forma_pagamento">Forma de Pagamento</label>
         <select name="forma_pagamento" id="forma_pagamento" required>
-          <option value="" disabled selected>Selecione...</option>
+          <option value="" disabled {% if not prefill.forma_pagamento %}selected{% endif %}>Selecione...</option>
           {% for forma in formas_pagamento %}
-          <option value="{{ forma }}">{{ forma }}</option>
+          <option value="{{ forma }}" {% if prefill.forma_pagamento == forma %}selected{% endif %}>{{ forma }}</option>
           {% endfor %}
         </select>
       </div>

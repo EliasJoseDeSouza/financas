@@ -77,9 +77,11 @@
 
           <td>
             <div class="actions">
-              <a href="/editar/{{ item.id }}" class="btn btn-secondary btn-sm">✏️</a>
+              <a href="/editar/{{ item.id }}" class="btn btn-secondary btn-sm" title="Editar">✏️</a>
+              <a href="/replicar/{{ item.id }}" class="btn btn-secondary btn-sm" title="Replicar lançamento">📋</a>
               <a href="/excluir/{{ item.id }}"
                  class="btn btn-danger btn-sm"
+                 title="Excluir"
                  onclick="return confirm('Excluir este lançamento?')">🗑</a>
             </div>
           </td>
