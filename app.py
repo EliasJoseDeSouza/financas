@@ -47,7 +47,7 @@ FORMAS_PAGAMENTO = [
     "Elias - Conta Santander",
     "Elias - Conta Itaú",
     "Elias - Conta Bradesco",
-    "Elias - iFood Beneficios",
+    "Elias - iFood Beneficios"
 ]
 
 
@@ -74,14 +74,16 @@ def dashboard():
         set(r.competencia for r in Lancamento.query.all())
     )
 
-    competencia_sel = request.args.get("competencia", "")
+    competencia_param = request.args.get("competencia", None)
     emprestado_sel  = request.args.get("emprestado", "exceto")
 
-    # Seleciona automaticamente a competência atual se houver lançamentos
-    if not competencia_sel:
+    if competencia_param is None:
+        # Primeiro acesso: seleciona a competência atual automaticamente
         atual = competencia_atual()
-        if atual in todas_competencias:
-            competencia_sel = atual
+        competencia_sel = atual if atual in todas_competencias else ""
+    else:
+        # Usuário escolheu explicitamente (incluindo "Todas" que passa string vazia)
+        competencia_sel = competencia_param
 
     query = Lancamento.query
     if competencia_sel:
