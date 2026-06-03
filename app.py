@@ -186,9 +186,8 @@ def relatorios():
     competencia_param = request.args.get("competencia", None)
 
     if competencia_param is None:
-        # Primeiro acesso: seleciona a competência atual automaticamente
-        atual = competencia_atual()
-        competencia_sel = atual if atual in todas_competencias else ""
+        # Primeiro acesso: mostra todos os lançamentos por padrão
+        competencia_sel = ""
     else:
         # Usuário escolheu explicitamente (incluindo "Todas" que passa string vazia)
         competencia_sel = competencia_param

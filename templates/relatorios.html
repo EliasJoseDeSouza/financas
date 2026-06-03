@@ -24,8 +24,8 @@
       📅 Competência
     </span>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="{{ url_for('relatorios') }}"
-         class="badge-filter {% if not competencia_sel %}active{% endif %}">
+      <a href="{{ url_for('relatorios') }}?competencia="
+         class="badge-filter {% if competencia_sel == '' %}active{% endif %}">
         Todas
       </a>
       {% for c in competencias %}
