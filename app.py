@@ -181,13 +181,17 @@ def relatorios():
         set(r.competencia for r in Lancamento.query.all())
     )
 
-    competencia_sel = request.args.get("competencia", "")
+    # Usa None como sentinel: se o parâmetro não veio na URL, aplica o default
+    # Se veio explicitamente (mesmo vazio, via botão "Todas"), respeita a escolha
+    competencia_param = request.args.get("competencia", None)
 
-    # Seleciona automaticamente a competência atual se houver lançamentos
-    if not competencia_sel:
+    if competencia_param is None:
+        # Primeiro acesso: seleciona a competência atual automaticamente
         atual = competencia_atual()
-        if atual in todas_competencias:
-            competencia_sel = atual
+        competencia_sel = atual if atual in todas_competencias else ""
+    else:
+        # Usuário escolheu explicitamente (incluindo "Todas" que passa string vazia)
+        competencia_sel = competencia_param
 
     query = Lancamento.query
     if competencia_sel:
@@ -205,12 +209,15 @@ def relatorios():
 
 @app.route("/relatorios/exportar")
 def exportar_xlsx():
-    import io
-    import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment
-    from openpyxl.utils import get_column_letter
+    try:
+     import io
+     import openpyxl
+     from openpyxl.styles import Font, PatternFill, Alignment
+     from openpyxl.utils import get_column_letter
+    except ImportError:
+        return "Erro: openpyxl nao instalado. Execute: pip install openpyxl", 500
 
-    competencia_sel = request.args.get("competencia", "")
+    competencia_sel = request.args.get("competencia", "").strip()
 
     query = Lancamento.query
     if competencia_sel:
