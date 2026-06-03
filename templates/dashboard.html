@@ -16,7 +16,7 @@
       📅 Competência
     </span>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="{{ url_for('dashboard', emprestado=emprestado_sel) }}"
+      <a href="{{ url_for('dashboard', competencia='', emprestado=emprestado_sel) }}"
          class="badge-filter {% if not competencia_sel %}active{% endif %}">
         Todas
       </a>

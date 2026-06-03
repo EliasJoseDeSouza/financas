@@ -13,6 +13,7 @@
   <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
     <a href="/lancamentos" class="btn btn-primary">➕ Novo Lançamento</a>
     <a href="/" class="btn btn-secondary">📊 Ver Dashboard</a>
+    <a href="{{ url_for('exportar_xlsx', competencia=competencia_sel) }}" class="btn btn-secondary">⬇️ Exportar .xlsx</a>
   </div>
 </div>
 

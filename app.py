@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
-from flask import Flask, render_template, request, redirect, url_for
+from datetime import date
+from flask import Flask, render_template, request, redirect, url_for, Response
 from models import db, Lancamento
 
 app = Flask(__name__)
@@ -28,7 +29,6 @@ def brl_filter(value):
         neg = value < 0
         abs_val = abs(value)
         inteiro, decimal = f"{abs_val:.2f}".split(".")
-        # Insere pontos de milhar
         inteiro = "{:,}".format(int(inteiro)).replace(",", ".")
         resultado = f"R$ {inteiro},{decimal}"
         return f"-{resultado}" if neg else resultado
@@ -36,29 +36,62 @@ def brl_filter(value):
         return "R$ 0,00"
 
 
+FORMAS_PAGAMENTO = [
+    "PIX",
+    "Boleto",
+    "Dinheiro",
+    "Elias - Santander Master",
+    "Elias - Santander Visa",
+    "Elias - Itaú Master",
+    "Elias - Itaú Visa",
+    "Elias - Conta Santander",
+    "Elias - Conta Itaú",
+    "Elias - Conta Bradesco",
+    "Elias - iFood Beneficios"
+]
+
+
+def sort_competencias(competencias):
+    """Ordena competências no formato MM/AAAA de forma crescente."""
+    def key(c):
+        try:
+            m, a = c.split("/")
+            return (int(a), int(m))
+        except Exception:
+            return (9999, 99)
+    return sorted(competencias, key=key)
+
+
+def competencia_atual():
+    """Retorna a competência atual no formato MM/AAAA."""
+    hoje = date.today()
+    return f"{hoje.month:02d}/{hoje.year}"
+
+
 @app.route("/")
 def dashboard():
-    # Todas as competências disponíveis (ordenadas)
-    todas_competencias = sorted(
-        set(r.competencia for r in Lancamento.query.all()),
-        reverse=True
+    todas_competencias = sort_competencias(
+        set(r.competencia for r in Lancamento.query.all())
     )
 
-    # Filtros via query-string
     competencia_sel = request.args.get("competencia", "")
-    emprestado_sel  = request.args.get("emprestado", "exceto")  # padrão: exceto
+    emprestado_sel  = request.args.get("emprestado", "exceto")
 
-    # Query base filtrada por competência
+    # Seleciona automaticamente a competência atual se houver lançamentos
+    if not competencia_sel:
+        atual = competencia_atual()
+        if atual in todas_competencias:
+            competencia_sel = atual
+
     query = Lancamento.query
     if competencia_sel:
         query = query.filter_by(competencia=competencia_sel)
 
     todos = query.all()
 
-    # Aplica filtro de emprestado
     if emprestado_sel == "1":
         todos = [x for x in todos if "emprestado" in x.descricao.lower()]
-    elif emprestado_sel != "todos":   # "exceto" ou qualquer valor desconhecido
+    elif emprestado_sel != "todos":
         todos = [x for x in todos if "emprestado" not in x.descricao.lower()]
 
     receitas_list = [x for x in todos if x.tipo == "Receita"]
@@ -68,7 +101,6 @@ def dashboard():
     total_despesas = sum(x.valor for x in despesas_list)
     saldo = total_receitas - total_despesas
 
-    # ── Dados do painel emprestado (sempre calculado para o card extra) ──
     todos_comp = Lancamento.query
     if competencia_sel:
         todos_comp = todos_comp.filter_by(competencia=competencia_sel)
@@ -79,15 +111,12 @@ def dashboard():
     emp_saldo    = emp_receitas - emp_despesas
     emp_count    = len(emp_list)
 
-    # ── Gráfico Receitas vs Despesas por competência ──
-    # Se há filtro, agrupamos pelo próprio mês; senão, por todos os meses
     if competencia_sel:
-        # Mostra só a competência filtrada
         labels_rec_desp = [competencia_sel]
         dados_receitas  = [total_receitas]
         dados_despesas  = [total_despesas]
     else:
-        comp_set = sorted(set(r.competencia for r in todos))
+        comp_set = sort_competencias(set(r.competencia for r in todos))
         rec_map  = defaultdict(float)
         desp_map = defaultdict(float)
         for x in todos:
@@ -99,13 +128,11 @@ def dashboard():
         dados_receitas  = [rec_map[c] for c in comp_set]
         dados_despesas  = [desp_map[c] for c in comp_set]
 
-    # ── Ranking forma de recebimento (apenas Receitas) ──
     rec_forma = defaultdict(float)
     for x in receitas_list:
         rec_forma[x.forma_pagamento] += x.valor
     rank_recebimento = sorted(rec_forma.items(), key=lambda t: t[1], reverse=True)
 
-    # ── Ranking forma de pagamento (apenas Despesas) ──
     desp_forma = defaultdict(float)
     for x in despesas_list:
         desp_forma[x.forma_pagamento] += x.valor
@@ -145,16 +172,22 @@ def lancamentos():
         db.session.commit()
         return redirect(url_for("relatorios"))
 
-    return render_template("lancamentos.html")
+    return render_template("lancamentos.html", formas_pagamento=FORMAS_PAGAMENTO)
 
 
 @app.route("/relatorios")
 def relatorios():
-    todas_competencias = sorted(
-        set(r.competencia for r in Lancamento.query.all()),
-        reverse=True
+    todas_competencias = sort_competencias(
+        set(r.competencia for r in Lancamento.query.all())
     )
+
     competencia_sel = request.args.get("competencia", "")
+
+    # Seleciona automaticamente a competência atual se houver lançamentos
+    if not competencia_sel:
+        atual = competencia_atual()
+        if atual in todas_competencias:
+            competencia_sel = atual
 
     query = Lancamento.query
     if competencia_sel:
@@ -167,6 +200,68 @@ def relatorios():
         dados=dados,
         competencias=todas_competencias,
         competencia_sel=competencia_sel,
+    )
+
+
+@app.route("/relatorios/exportar")
+def exportar_xlsx():
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+
+    competencia_sel = request.args.get("competencia", "")
+
+    query = Lancamento.query
+    if competencia_sel:
+        query = query.filter_by(competencia=competencia_sel)
+    dados = query.order_by(Lancamento.id.desc()).all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Lançamentos"
+
+    # Cabeçalho
+    headers = ["#", "Tipo", "Competência", "Descrição", "Valor (R$)", "Forma de Pagamento"]
+    header_fill = PatternFill("solid", fgColor="1E293B")
+    header_font = Font(bold=True, color="FFFFFF")
+
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+
+    # Dados
+    for row_idx, item in enumerate(dados, 2):
+        valor = item.valor if item.tipo == "Receita" else -item.valor
+        ws.cell(row=row_idx, column=1, value=item.id)
+        ws.cell(row=row_idx, column=2, value=item.tipo)
+        ws.cell(row=row_idx, column=3, value=item.competencia)
+        ws.cell(row=row_idx, column=4, value=item.descricao)
+        ws.cell(row=row_idx, column=5, value=valor)
+        ws.cell(row=row_idx, column=6, value=item.forma_pagamento)
+
+        # Cor por tipo
+        if item.tipo == "Receita":
+            ws.cell(row=row_idx, column=5).font = Font(color="16A34A")
+        else:
+            ws.cell(row=row_idx, column=5).font = Font(color="DC2626")
+
+    # Largura das colunas
+    larguras = [8, 12, 16, 40, 18, 30]
+    for i, w in enumerate(larguras, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    nome = f"lancamentos_{competencia_sel.replace('/', '-') if competencia_sel else 'todos'}.xlsx"
+    return Response(
+        output.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={nome}"}
     )
 
 
@@ -183,7 +278,7 @@ def editar(id):
         db.session.commit()
         return redirect(url_for("relatorios"))
 
-    return render_template("editar.html", item=item)
+    return render_template("editar.html", item=item, formas_pagamento=FORMAS_PAGAMENTO)
 
 
 @app.route("/excluir/<int:id>")

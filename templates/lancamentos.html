@@ -17,8 +17,8 @@
       <div class="form-group">
         <label for="tipo">Tipo</label>
         <select name="tipo" id="tipo" required>
+          <option value="Despesa" selected>Despesa</option>
           <option value="Receita">Receita</option>
-          <option value="Despesa">Despesa</option>
         </select>
       </div>
 
@@ -59,12 +59,12 @@
       <!-- Forma de pagamento -->
       <div class="form-group">
         <label for="forma_pagamento">Forma de Pagamento</label>
-        <input
-          type="text"
-          name="forma_pagamento"
-          id="forma_pagamento"
-          placeholder="Ex: PIX, Cartão, Dinheiro..."
-          required>
+        <select name="forma_pagamento" id="forma_pagamento" required>
+          <option value="" disabled selected>Selecione...</option>
+          {% for forma in formas_pagamento %}
+          <option value="{{ forma }}">{{ forma }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- Botão -->
