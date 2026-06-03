@@ -78,9 +78,8 @@ def dashboard():
     emprestado_sel  = request.args.get("emprestado", "exceto")
 
     if competencia_param is None:
-        # Primeiro acesso: seleciona a competência atual automaticamente
-        atual = competencia_atual()
-        competencia_sel = atual if atual in todas_competencias else ""
+        # Primeiro acesso: seleciona a competência atual sempre
+        competencia_sel = competencia_atual()
     else:
         # Usuário escolheu explicitamente (incluindo "Todas" que passa string vazia)
         competencia_sel = competencia_param
